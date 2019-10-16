@@ -1,29 +1,28 @@
-lmBoot <- function(inputData, nBoot){
+lmBoot <- function(inputData,y,ycol, nboot){
   
-  for(i in 1:nBoot){
+  col_names <- colnames(inputData)
+  col_names <- col_names[-ycol]
+    
+  
+  for(i in 1:nboot){
     
     # resample our data with replacement
     bootData <- inputData[sample(1:nrow(inputData), nrow(inputData), replace = T),]
+    bootResults<- matrix(NA,nrow =(length(col_names)+1),ncol = nboot)
     
     # fit the model under this alternative reality
-    bootLM <- lm(y ~ x, data = bootData)
+    bootLM <- lm(paste(paste(deparse(substitute(y))," ~",sep = ""),paste(col_names,collapse = " + "),collapse = " "), data = bootData)
     
     # store the coefs
-    if(i == 1){
-      
-      bootResults <- matrix(coef(bootLM), ncol = 2)
-
-      } else {
-      
-      bootResults<- rbind(bootResults, matrix(coef(bootLM), ncol = 2))
-
-    }
+    bootResults[,i] <- coef(bootLM)
     
 
   } # end of i loop
   
-  bootResults
+  return(bootResults)
   
 }
 # testing
 #testing2
+
+# https://www.math.ucla.edu/~anderson/rw1001/library/base/html/paste.html
