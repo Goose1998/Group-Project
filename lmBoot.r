@@ -1,3 +1,10 @@
+library(parallel)
+library(profvis)
+ncores <- detectCores()-1
+myClust <- makeCluster(ncores-1, type = "PSOCK")
+
+
+
 lmBoot <- function(inputData,y,ycol, nboot){
   
   col_names <- colnames(inputData)
@@ -5,8 +12,7 @@ lmBoot <- function(inputData,y,ycol, nboot){
   bootResults<- matrix(NA,nrow =(length(col_names)+1),ncol = nboot)
   colnames(bootResults) <- c("intercept",col_names)
     
-  
-  for(i in 1:nboot){
+  getCoefs <- function(i){
     
     # resample our data with replacement
     bootData <- inputData[sample(1:nrow(inputData), nrow(inputData), replace = T),]
@@ -17,9 +23,11 @@ lmBoot <- function(inputData,y,ycol, nboot){
     
     # store the coefs
     bootResults[,i] <- coef(bootLM)
-    
+  }
+  
+    bootCoefs <- foreach(i=1:nboot) %dopar% getCoefs(i)
 
-  } # end of i loop
+   # end of i loop
   
   return(bootResults)
   
